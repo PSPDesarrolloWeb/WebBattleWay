@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Administración{% endblock %}
+
+{% block container %}
+<br>
+<h1 class="display-4  text-center" style="color:yellow">Administración de Battle Way</h1>
+<h2 class="text-center" style="color: white;">Juegos disponibles en la plataforma</h2>
+<br>
+<div class="card-container">
+    <div class="row justify-content-center"> <!-- Agrega la clase justify-content-center para centrar horizontalmente -->
+        <div class="col-md-4">
+            <div class="card">
+                <img src="https://blog.activision.com/content/dam/atvi/activision/atvi-touchui/blog/callofduty/feature/codm/COD-LAUNCH-TOUT.jpg" alt="Juego 1" class="card-image">
+                <br>
+                <div class="card-content" style="text-align: center;">
+                    <h3>Call of Duty Mobile</h3>
+                    <p>Juego de disparos multijugador en dispositivos móviles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="https://live-assets.web.stumbleguys.com/cms/website_309b26b7bc.webp" alt="Juego 2" class="card-image">
+                <br>
+                <div class="card-content" style="text-align: center;">
+                    <h3>Stumble Guys</h3>
+                    <p>Juego de competencia multijugador con obstáculos</p>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="col-md-4">
+            <div class="card">
+                <img src="assets/img/freefire.jpg" alt="Juego 3" class="card-image">
+                <div class="card-content" style="text-align: center;">
+                    <h3>Free Fire</h3>
+                    <p>Shooter de habilidades con armas en tercera persona</p>
+                </div>
+            </div>
+        </div> -->
+    </div>
+</div>
+{% endblock %}

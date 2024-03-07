@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Jugadores{% endblock %}
+
+{% block container %}
+<br>
+<h2><i class="bi bi-people-fill" style="color:#f54336;"></i> Equipos por rangos</h2>
+<div class="row justify-content-center">
+    {% for nivel in ranges %}
+    <div class="col-md-4 mb-4"> <!-- Agregamos la clase mb-4 para aplicar un margen inferior -->
+        <div class="card text-center">
+            <br>
+            <img src="{{ nivel.img }}" class="card-img-top mx-auto d-block" alt="Imagen de {{ nivel.nombre }}" style="width: 50px;">
+            <div class="card-body">
+                <h5 class="card-title">{{ nivel.nombre }}</h5>
+                <p class="card-text">{{ nivel.detalle }}</p>
+            </div>
+        </div>        
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

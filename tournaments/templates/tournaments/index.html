@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %} Torneos {% endblock %}
+
+{% block container %}
+<br>
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+    {% for game in games %}
+    {% if game.status == 1 %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if forloop.first %}active{% endif %}" id="{{ game.name|slugify }}-tab"
+            data-bs-toggle="tab" data-bs-target="#{{ game.name|slugify }}" type="button" role="tab"
+            aria-controls="{{ game.name|slugify }}" aria-selected="{{ forloop.first }}">{{ game.name }}</button>
+    </li>
+    {% endif %}
+    {% endfor %}
+</ul>
+<div class="tab-content" id="myTabContent">
+    {% for game in games %}
+    <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ game.name|slugify }}" role="tabpanel"
+        aria-labelledby="{{ game.name|slugify }}-tab">
+        <br>
+        <div class="section">
+            <h2>Creados</h2>
+            {% if game.tournaments_created %}
+            <div class="row justify-content-center">
+                {% for tournament in game.tournaments_created %}
+                <div class="col-md-4">
+                    <div class="card" style="position: relative;">
+                        <img src="{{ tournament.image.url }}" alt="Creado" height="180px">
+                        <br>
+                        <h3 style="text-align: center;">{{ tournament.name }}</h3>
+                        <p style="text-align: center;">{{ tournament.date }} {{ tournament.time|time:'h:i A' }}</p>
+                        <a href="" style="position: absolute; top: 0; right: 0;">
+                            <div class="button-container"
+                                style="position: absolute; top: 0; right: 0; display: flex; flex-direction: column; align-items: flex-end; margin-top: 0px;">
+                                <a href="{% url 'edit-tournament' tournament.id %}">
+                                    <button type="button" class="btn btn-dark">
+                                        <i class="bi bi-pencil"></i> <!-- Icono de editar -->
+                                    </button>
+                                </a>
+                                <!-- Botón para eliminar el torneo -->
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteConfirmationModal-{{ tournament.id }}"
+                                    data-tournament-name="{{ tournament.name }}">
+                                    <i class="bi bi-trash"></i> <!-- Icono de borrar -->
+                                </button>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <!-- Modal de confirmación de eliminación -->
+                <div class="modal fade" id="deleteConfirmationModal-{{ tournament.id }}" tabindex="-1"
+                    aria-labelledby="deleteConfirmationModalLabel-{{ tournament.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteConfirmationModalLabel-{{ tournament.id }}">¿Estás seguro de eliminar este
+                                    torneo?</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- Aquí insertamos el nombre del torneo usando Django templating -->
+                                <p>Estás a punto de eliminar el torneo <strong>{{ tournament.name }}</strong>. ¿Estás seguro?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <a id="deleteTournamentLink" href="{% url 'delete-tournament' tournament.id %}"
+                                    class="btn btn-danger">Eliminar</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <hr>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="card-title">No hay torneos</h4>
+                    <p class="card-text">No existen torneos creados para este juego</p>
+                    <a href="/create-tournament">
+                        <button class="btn btn-primary"
+                            style="position: center; bottom: 10px; right: 10px; background-color: #2197f2;">
+                            Crea un torneo <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </a>
+                </div>
+            </div>
+
+            <hr>
+            {% endif %}
+            <h2>En curso</h2>
+            {% if game.tournaments_online %}
+            <div class="row justify-content-center">
+                {% for tournament in game.tournaments_online %}
+                <div class="col-md-4">
+                    <div class="card" style="position: relative;">
+                        <img src="{{ tournament.image.url }}" alt="Creado" height="180px">
+                        <br>
+                        <h3 style="text-align: center;">{{ tournament.name }}</h3>
+                        <p style="text-align: center;">{{ tournament.date }} {{ tournament.time|time:'h:i A' }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <hr>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="card-title">No hay torneos</h4>
+                    <p class="card-text">No existen torneos en curso para este juego</p>
+                </div>
+            </div>
+            <hr>
+            {% endif %}
+            <h2>Finalizados</h2>
+            {% if game.tournaments_ended %}
+            <div class="row justify-content-center">
+                {% for tournament in game.tournaments_ended %}
+                <div class="col-md-4">
+                    <div class="card" style="position: relative;">
+                        <img src="{{ tournament.image.url }}" alt="Creado" height="180px">
+                        <br>
+                        <h3 style="text-align: center;">{{ tournament.name }}</h3>
+                        <p style="text-align: center;">{{ tournament.date }} {{ tournament.time|time:'h:i A' }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="card-title">No hay torneos</h4>
+                    <p class="card-text">No existen torneos finalizados para este juego</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

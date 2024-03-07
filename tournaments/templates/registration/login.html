@@ -1,0 +1,43 @@
+{% extends "baseClient.html" %}
+{% block title %}Administración{% endblock %}
+
+{% block container %}
+<style>
+    .btn.btn-danger:hover {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+</style>
+<!-- <div class="d-flex justify-content-center align-items-center" style="height: 100vh;"> -->
+<br><br><br>
+<div class="card col-md-4" style="margin: 0 auto;">
+    <div class="card-header bg-dark text-white">
+        <h5 class="card-title text-center">Iniciar Sesión</h5>
+    </div>
+    <div class="card-body">
+        <form>
+            <div class="form-group">
+                <label for="nombre"><i class="bi bi-person"></i> Correo Electrónico:</label>
+                <input type="text" class="form-control" id="email" name="email" [(ngModel)]="loginUser.email">
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="contrasena"><i class="bi bi-shield-lock"></i> Contraseña:</label>
+                <input type="password" class="form-control" id="password" name="password"
+                    [(ngModel)]="loginUser.password">
+            </div>
+            <br>
+            <div class="d-flex justify-content-center">
+                <button type="button" class="btn btn-danger" (click)="login(loginUser)">Ingresar a Battle Way</button>
+            </div>
+            <div class="d-flex justify-content-center">
+                <div class="buttons-container">
+                    <span><a href="/recoverPass">Olvidaste tu contraseña?</a></span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- </div> -->
+<br><br>
+{% endblock %}

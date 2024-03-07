@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %} Listado de torneos {% endblock %}
+
+{% block container %}
+<br>
+<div class="section">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>Creados</h2>
+        <button type="button" class="btn btn-danger">
+            <i class="bi bi-plus-circle"></i> Nuevo torneo
+        </button>
+    </div>    
+    <div class="card">
+        <!-- <img src="creados.jpg" alt="Creados"> -->
+        <h3>Título del torneo creado</h3>
+        <p>Subtítulo del torneo creado</p>
+    </div>
+</div>
+<hr>
+<div class="section">
+    <h2>En curso</h2>
+    <div class="card">
+        <!-- <img src="en_curso.jpg" alt="En curso"> -->
+        <h3>Título del torneo en curso</h3>
+        <p>Subtítulo del torneo en curso</p>
+    </div>
+</div>
+<hr>
+<div class="section">
+    <h2>Finalizados</h2>
+    <div class="card">
+        <!-- <img src="finalizados.jpg" alt="Finalizados"> -->
+        <h3>Título del torneo finalizado</h3>
+        <p>Subtítulo del torneo finalizado</p>
+    </div>
+</div>
+
+{% endblock %}
