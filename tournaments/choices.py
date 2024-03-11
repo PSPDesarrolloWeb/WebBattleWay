@@ -1,5 +1,5 @@
 estado = (
-    ('C', 'Creado'),
-    ('O','En curso'),
-    ('E','Finalizado'),
+    ('created', 'Creado'),
+    ('online','En curso'),
+    ('ended','Finalizado'),
 )

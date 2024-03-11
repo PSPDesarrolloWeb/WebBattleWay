@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Jugadores{% endblock %}
+
+{% block container %}
+<style>
+    .icon-btn {
+        padding: 0.01rem 0.30rem;
+        border-radius: 0.25rem;
+    }
+
+    .icon-btn i {
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background-color: #2197f2 !important;
+        border-color: #2197f2 !important;
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus,
+    .btn-primary:active {
+        background-color: #1a7bb9 !important;
+        border-color: #1a7bb9 !important;
+    }
+
+    .btn-danger {
+        background-color: #f54336 !important;
+        border-color: #f54336 !important;
+    }
+
+    .btn-danger:hover,
+    .btn-danger:focus,
+    .btn-danger:active {
+        background-color: #d3362d !important;
+        border-color: #d3362d !important;
+    }
+</style>
+<br>
+<h2><i class="bi bi-person-lines-fill" style="color:#f54336;"></i> Asignación de puntaje por torneo</h2>
+<hr>
+<div class="d-flex flex-column align-items-center">
+    <h3 class="text-center mb-3">Seleccione un juego</h3>
+    <h3><i class="bi bi-chevron-double-down align-middle"></i></h3>
+</div>
+<div class="row justify-content-center">
+    {% for data in games %}
+    {% if data.status == 1 %}
+    <div class="col-md-4 mb-5">
+        <a href="#gameModal-{{ data.id }}" data-bs-toggle="modal" class="text-decoration-none">
+            <div class="card">
+                <img class="card-img-top" src="{{ data.image.url }}" alt="{{ data.name }}" style="height: 220px;">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <h3 class="card-title my-auto">{{ data.name }}</h3>
+                </div>
+
+            </div>
+        </a>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% for game in games %}
+{% if game.status == 1 %}
+<div class="modal fade" id="gameModal-{{ game.id }}" tabindex="-1" aria-labelledby="gameModalLabel-{{ game.id }}"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <img src="{{ game.image.url }}" alt="{{ game.name }}" style="height: 20px; margin-right: 10px;">
+                <h5 class="modal-title" id="gameModalLabel-{{ game.id }}">
+                    {{ game.name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Torneos finalizados</h6>
+                <table class="table table-striped table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="text-center"><i class="bi bi-list-ol"></i></th>
+                            <th class="text-center">Nombre</th>
+                            <th class="text-center">Fecha</th>
+                            <th class="text-center">Hora</th>
+                            <th class="text-center">Participantes</th>
+                            <th class="text-center">Total BC</th>
+                            <th class="text-center">Puntaje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tournament in game.tournaments_ended %}
+                        <tr>
+                            <td class="text-center align-middle">{{ forloop.counter }}</td>
+                            <td class="align-middle">{{ tournament.name }}</td>
+                            <td class="align-middle">{{ tournament.date }}</td>
+                            <td class="align-middle">{{ tournament.time }}</td>
+                            <td class="align-middle">{{ tournament.max_participants }}</td>
+                            <td class="align-middle">{{ tournament.points }}</td>
+                            <td class="text-center align-middle">
+                                <a href="#editTournamentModal-{{ tournament.id }}" class="btn btn-primary"
+                                    data-bs-toggle="modal">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+                                <a href="#viewTournamentModal-{{ tournament.id }}" class="btn btn-danger"
+                                    data-bs-toggle="modal">
+                                    <i class="bi bi-eye-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No hay torneos finalizados para este juego</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% for tournament in game.tournaments_ended %}
+<!-- Modal para editar torneo -->
+<div class="modal fade" id="editTournamentModal-{{ tournament.id }}" tabindex="-1"
+    aria-labelledby="editTournamentModalLabel-{{ tournament.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between">
+                <h6>Torneo: {{tournament.name}}</h6>
+                <span>Puntaje: {{tournament.points}}</span>
+                <!-- Asegúrate de reemplazar 100 con el valor de puntaje deseado -->
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row mb-3" id="inputRow">
+                        <div class="col-md-5">
+                            <label for="description">Descripción</label>
+                            <input type="text" class="form-control" id="description" name="description">
+                        </div>
+                        <div class="col-md-5">
+                            <label for="participant">Participante</label>
+                            <select class="form-select" id="participant" name="participant">
+                                <option selected>Seleccione un participante</option>
+                                {% for user in firestore_users %}
+                                    <option value="{{ user.username }}">{{ user.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="score">Puntaje</label>
+                            <input type="number" class="form-control" id="score" name="score">
+                        </div>
+
+                    </div>
+                    <button type="button" class="btn btn-primary" id="addRow">Añadir otra fila</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Regresar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalles del torneo -->
+<div class="modal fade" id="viewTournamentModal-{{ tournament.id }}" tabindex="-1"
+    aria-labelledby="viewTournamentModalLabel-{{ tournament.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Contenido del modal para ver detalles del torneo -->
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endfor %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var editTournamentModals = document.querySelectorAll('.modal[id^="editTournamentModal-"]');
+        editTournamentModals.forEach(function (modal) {
+            modal.addEventListener('hidden.bs.modal', function () {
+                var gameModalId = modal.querySelector('[data-game-modal-id]').getAttribute('data-game-modal-id');
+                var gameModal = document.getElementById(gameModalId);
+                if (gameModal) {
+                    var bootstrapModal = new bootstrap.Modal(gameModal);
+                    bootstrapModal.show();
+                }
+            });
+        });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('addRow').addEventListener('click', function () {
+            var row = document.createElement('div');
+            row.className = 'row mb-3';
+            row.innerHTML = `
+                <div class="col-md-4">
+                    <label for="description">Descripción</label>
+                    <input type="text" class="form-control" id="description" name="description">
+                </div>
+                <div class="col-md-4">
+                    <label for="score">Puntaje</label>
+                    <input type="number" class="form-control" id="score" name="score">
+                </div>
+                <div class="col-md-4">
+                    <label for="participant">Participante</label>
+                    <select class="form-select" id="participant" name="participant">
+                        <option selected>Seleccione un participante</option>
+                        <!-- Aquí puedes añadir opciones para los participantes -->
+                    </select>
+                </div>
+            `;
+            document.getElementById('inputRow').parentNode.insertBefore(row, document.getElementById('inputRow').nextSibling);
+        });
+    });
+</script>
+
+{% endblock %}

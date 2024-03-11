@@ -4,6 +4,7 @@ from .choices import estado
 
 class Game(models.Model):
     id = models.AutoField(primary_key=True)
+    UIDGame = models.CharField(max_length=200, null=True, blank=True, verbose_name= 'UID')
     name = models.CharField(max_length=100, verbose_name= 'Nombre')
     company = models.CharField(max_length=100, verbose_name= 'Empresa')
     details = models.CharField(max_length=500, verbose_name= 'Detalles')
@@ -25,8 +26,8 @@ class Game(models.Model):
 class Tournament(models.Model):
     id = models.AutoField(primary_key=True)
     game = models.ForeignKey(Game, null=True, blank=True, on_delete=models.CASCADE, verbose_name= 'Juego')
-    name = models.CharField(max_length=100, verbose_name= 'Titulo')
-    status = models.CharField(max_length=1, choices=estado, default='C', verbose_name= 'Estado')
+    name = models.CharField(max_length=100, verbose_name= 'Nombre')
+    status = models.CharField(max_length=7, choices=estado, default='C', verbose_name= 'Estado')
     date = models.DateField( verbose_name= 'Fecha')
     time = models.TimeField( verbose_name= 'Hora')
     max_participants = models.IntegerField( verbose_name= 'Participantes')

@@ -7,53 +7,19 @@ from django.db.models import Case, When, Value, CharField
 import firebase_admin
 from firebase_admin import credentials, firestore
 from django.contrib.auth.decorators import login_required
+from firebase_admin import storage
 
 
 
 cred = credentials.Certificate("credentialsFirestore.json")
-firebase_admin.initialize_app(cred)
-
+firebase_admin.initialize_app(cred, {
+    'storageBucket': 'battlewaycloud.appspot.com'
+})
+bucket = storage.bucket()
 db=firestore.client()
-@login_required
+# @login_required
 def homeAdmin(request):
     return render(request, 'pages/home-admin.html')
-@login_required
-def gameList(request):
-    games = Game.objects.all()
-    return render(request, 'games/index.html', {'games': games})
-
-def tournamentList(request):
-    games = Game.objects.all()
-    for game in games:
-      game.tournaments_created = Tournament.objects.filter(game=game, status='C')
-      game.tournaments_online = Tournament.objects.filter(game=game, status='O')
-      game.tournaments_ended = Tournament.objects.filter(game=game, status='E')
-    return render(request, 'tournaments/index.html', {'games': games})
-
-def createTournament(request):
-    games = Game.objects.all()
-    formTournament = TournamentForm(request.POST or None, request.FILES or None)
-    if formTournament.is_valid():
-        formTournament.save()
-        return redirect('tournament-list')
-    return render(request, 'tournaments/create.html', {'formTournament': formTournament, 'games': games },)
-
-def editTournament(request, id):
-    tournament = Tournament.objects.get(id=id)
-    formTournament = TournamentForm(request.POST or None, request.FILES or None, instance=tournament)
-    print (formTournament)
-    if formTournament.is_valid() and request.POST:
-        formTournament.save()
-        return redirect('tournament-list')
-    else:
-        print ("Datos no ingresados")
-    return render(request, 'tournaments/edit.html', {'formTournament': formTournament, 'is_edit': True})
-
-def deleteTournament(request, id):
-    tournament = Tournament.objects.get(id=id)
-    tournament.delete()
-    return redirect('tournament-list')
-
 def get_all_users():
     users_ref = db.collection('user')
     users = users_ref.stream()
@@ -65,30 +31,95 @@ def get_all_users():
 def playersList(request):
     players = Player.objects.all()
     print(players)
-    print (get_all_users())
-    return render(request, 'players/index.html', {'players': players})
+    firestore_users = get_all_users() # Obtiene los datos de Firestore
 
-def createPlayer(request):
-    formPlayer = PlayerForm(request.POST or None, request.FILES or None)
-    if formPlayer.is_valid():
-        formPlayer.save()
-        return redirect('player-list')
-    return render(request, 'players/create.html', {'formPlayer': formPlayer})
+    return render(request, 'players/index.html', {'players': players, 'firestore_users': firestore_users})
 
-def editPlayer(request, id):
-    player = Player.objects.get(id=id)
-    formPlayer = PlayerForm(request.POST or None, request.FILES or None, instance=player)
-    if formPlayer.is_valid() and request.POST:
-        formPlayer.save()
-        return redirect('player-list')
+# def createPlayer(request):
+#     formPlayer = PlayerForm(request.POST or None, request.FILES or None)
+#     if formPlayer.is_valid():
+#         formPlayer.save()
+#         return redirect('player-list')
+#     return render(request, 'players/create.html', {'formPlayer': formPlayer})
+
+# def editPlayer(request, id):
+#     player = Player.objects.get(id=id)
+#     formPlayer = PlayerForm(request.POST or None, request.FILES or None, instance=player)
+#     if formPlayer.is_valid() and request.POST:
+#         formPlayer.save()
+#         return redirect('player-list')
+#     else:
+#         print ("Datos no ingresados")
+#     return render(request, 'players/edit.html', {'formPlayer': formPlayer})
+
+# def deletePlayer(request, id):
+#     player = Player.objects.get(id=id)
+#     player.delete()
+#     return redirect('player-list')
+
+def pointsView(request):
+    games = Game.objects.all()
+    for game in games:
+        game.tournaments_ended = Tournament.objects.filter(game=game, status='ended')
+    firestore_users = get_all_users() # Obtiene los datos de Firestore
+    return render(request, 'points/index.html', {'games': games, 'firestore_users': firestore_users})
+
+# @login_required
+def gameList(request):
+    games = Game.objects.all()
+    return render(request, 'games/index.html', {'games': games})
+
+def tournamentList(request):
+    games = Game.objects.all()
+    for game in games:
+      game.tournaments_created = Tournament.objects.filter(game=game, status='created')
+      game.tournaments_online = Tournament.objects.filter(game=game, status='online')
+      game.tournaments_ended = Tournament.objects.filter(game=game, status='ended')
+    return render(request, 'tournaments/index.html', {'games': games})
+
+def createTournament(request):
+    games = Game.objects.filter(status=1)
+    formTournament = TournamentForm(request.POST or None, request.FILES or None)
+    if formTournament.is_valid():
+        tournament = formTournament.save()
+        
+        data = {
+            'creator':'XxETDfQHDSB4lnLeDY0y',
+            'name': tournament.name,
+            'status': tournament.status,
+            'game': tournament.game.UIDGame if tournament.game else None,
+            'date': '2024-02-01',
+            'inscribedPlayers':[],
+            'players': tournament.max_participants,
+            'points': tournament.points,
+            'rules': tournament.rules,
+            'url': tournament.url,
+            'imageURL': 'imageurl.com' 
+        }
+        db.collection('tournaments').add(data)
+        return redirect('tournament-list')
     else:
-        print ("Datos no ingresados")
-    return render(request, 'players/edit.html', {'formPlayer': formPlayer})
+        print('Errores de formulario', formTournament.errors,)
+    return render(request, 'tournaments/create.html', {'formTournament': formTournament, 'games': games})
 
-def deletePlayer(request, id):
-    player = Player.objects.get(id=id)
-    player.delete()
-    return redirect('player-list')
+def editTournament(request, id):
+    tournament = Tournament.objects.get(id=id)
+    games = Game.objects.filter(status=1) # Asegúrate de incluir esta línea
+    formTournament = TournamentForm(request.POST or None, request.FILES or None, instance=tournament)
+    print(formTournament)
+    if formTournament.is_valid() and request.POST:
+        formTournament.save()
+        return redirect('tournament-list')
+    else:
+        print("Datos no ingresados")
+    return render(request, 'tournaments/edit.html', {'formTournament': formTournament, 'games': games, 'is_edit': True})
+
+def deleteTournament(request, id):
+    tournament = Tournament.objects.get(id=id)
+    tournament.delete()
+    return redirect('tournament-list')
+
+
 
 def reportList(request):
     reports = [

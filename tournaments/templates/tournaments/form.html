@@ -5,7 +5,7 @@
             <div class="row">
                 {% csrf_token %}
                 {% for campo in formTournament %}
-                {% if campo.label == "Titulo" %}
+                {% if campo.label == "Nombre" %}
                 <div class="col-md-5 mb-3">
                     <label for="{{ campo.name }}" class="form-label">{{ campo.label }}</label>
                     <input type="text" class="form-control" id="{{ campo.name }}" name="{{ campo.name }}"
@@ -14,10 +14,10 @@
                 {% elif campo.label == "Estado" %}
                 <div class="col-md-4 mb-3">
                     <label for="{{ campo.name }}" class="form-label">{{ campo.label }}</label>
-                    <select class="form-select" id="{{ campo.name }}" name="{{ campo.name }}" >
-                        <option value="created">Creado</option>
-                        <option value="online">En curso</option>
-                        <option value="ended">Finalizado</option>
+                    <select class="form-select" id="{{ campo.name }}" name="{{ campo.name }}">
+                        {% for value, label in campo.field.choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 {% elif campo.label == "Juego" %}
