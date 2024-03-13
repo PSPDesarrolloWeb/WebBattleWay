@@ -30,9 +30,9 @@
             <tr style="text-align: center;">
                 <th scope="col"><i class="bi bi-list-ol"></i></th>
                 <th scope="col">Título</th>
-                <th scope="col">ID del Jugador</th>
+                <th scope="col">Creador</th>
                 <th scope="col">Descripción</th>
-                <th scope="col">Imagen</th>
+                <th scope="col">Fecha</th>
                 <th scope="col">Acciones</th>
             </tr>
         </thead>
@@ -43,11 +43,11 @@
                 <td>{{ report.title }}</td>
                 <td>{{ report.player_id }}</td>
                 <td>{{ report.description }}</td>
-                <td style="text-align: center;"> <img src="{{ report.image_url }}" alt="Report Image" height="35px">
-                </td>
+                <td style="text-align: center;">{{ report.date }}</td>
                 <td style="width: 160px; text-align: center;">
                     <!-- Botón para ver detalles del reporte -->
-                    <button class="btn btn-primary" style="background-color: #2197f2;" data-bs-toggle="modal" data-bs-target="#reportDetailsModal{{ forloop.counter }}">
+                    <button class="btn btn-primary" style="background-color: #2197f2;" data-bs-toggle="modal"
+                        data-bs-target="#reportDetailsModal{{ forloop.counter }}">
                         Ver más
                     </button>
                 </td>
@@ -59,7 +59,8 @@
 
 {% for report in reports %}
 <!-- Modal de Detalles del Reporte -->
-<div class="modal fade" id="reportDetailsModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="reportDetailsModal{{ forloop.counter }}Label" aria-hidden="true">
+<div class="modal fade" id="reportDetailsModal{{ forloop.counter }}" tabindex="-1"
+    aria-labelledby="reportDetailsModal{{ forloop.counter }}Label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -70,18 +71,22 @@
                 <p><strong>Título:</strong> {{ report.title }}</p>
                 <p><strong>ID del Jugador:</strong> {{ report.player_id }}</p>
                 <p><strong>Descripción:</strong> {{ report.description }}</p>
+                <p><strong>Estado:</strong> {{ report.status }}</p>
                 <p><strong>Imagen:</strong> <img src="{{ report.image_url }}" alt="Report Image" height="100px"></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal{{ forloop.counter }}">Cambiar Estado de Reporte</button>
+                <button type="button" class="btn btn-danger" style="background-color: #f54336;">Rechazar</button>
+                <button type="button" class="btn btn-primary" style="background-color: #2197f2;" data-bs-toggle="modal"
+                    data-bs-target="#confirmModal{{ forloop.counter }}">Aprobar reporte</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Modal de Confirmación -->
-<div class="modal fade" id="confirmModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="confirmModal{{ forloop.counter }}Label" aria-hidden="true">
+<div class="modal fade" id="confirmModal{{ forloop.counter }}" tabindex="-1"
+    aria-labelledby="confirmModal{{ forloop.counter }}Label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">

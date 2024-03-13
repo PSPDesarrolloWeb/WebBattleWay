@@ -1,42 +1,77 @@
 {% extends "base.html" %}
-{% block title %}Administración{% endblock %}
+{% block title %}Administración Battle Way{% endblock %}
 
 {% block container %}
 <br>
-<h1 class="display-4  text-center" style="color:yellow">Administración de Battle Way</h1>
-<h2 class="text-center" style="color: white;">Juegos disponibles en la plataforma</h2>
+<h2 class="text-center" style="color: white;">Usuarios en el mundo</h2>
 <br>
-<div class="card-container">
-    <div class="row justify-content-center"> <!-- Agrega la clase justify-content-center para centrar horizontalmente -->
-        <div class="col-md-4">
-            <div class="card">
-                <img src="https://blog.activision.com/content/dam/atvi/activision/atvi-touchui/blog/callofduty/feature/codm/COD-LAUNCH-TOUT.jpg" alt="Juego 1" class="card-image">
-                <br>
-                <div class="card-content" style="text-align: center;">
-                    <h3>Call of Duty Mobile</h3>
-                    <p>Juego de disparos multijugador en dispositivos móviles</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <img src="https://live-assets.web.stumbleguys.com/cms/website_309b26b7bc.webp" alt="Juego 2" class="card-image">
-                <br>
-                <div class="card-content" style="text-align: center;">
-                    <h3>Stumble Guys</h3>
-                    <p>Juego de competencia multijugador con obstáculos</p>
-                </div>
-            </div>
-        </div>
-        <!-- <div class="col-md-4">
-            <div class="card">
-                <img src="assets/img/freefire.jpg" alt="Juego 3" class="card-image">
-                <div class="card-content" style="text-align: center;">
-                    <h3>Free Fire</h3>
-                    <p>Shooter de habilidades con armas en tercera persona</p>
-                </div>
-            </div>
-        </div> -->
-    </div>
-</div>
+<div class="loader"></div>
+<div id="chart_div" style="width: 900px; height: 400px; margin: 0 auto;"></div>
+<script type='text/javascript'>
+    google.charts.load('current', {
+        'packages': ['geochart'],
+        'mapsApiKey': 'AIzaSyB4NfIMaP0fcg3mjH_ESFxwU6gYSS22h0s'
+    });
+    google.charts.setOnLoadCallback(drawRegionsMap);
+
+    function drawRegionsMap() {
+        document.querySelector('.loader').style.display = 'none';
+
+        var firestoreData = JSON.parse('{{ firestore_users_json|escapejs }}');
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Country');
+        data.addColumn('number', 'Usuarios registrados');
+
+        var countryCounts = {};
+
+        firestoreData.forEach(function (user) {
+            if (countryCounts[user.country]) {
+                countryCounts[user.country]++;
+            } else {
+                countryCounts[user.country] = 1;
+            }
+        });
+
+        Object.keys(countryCounts).forEach(function (country) {
+            data.addRow([country, countryCounts[country]]);
+        });
+
+        var options = {
+            region: 'world',
+            displayMode: 'regions',
+            colorAxis: {
+                colors: ['#b7b7b7', '#2197f2', '#f54336']
+            },
+            backgroundColor: '#212529'
+        };
+
+        var chart = new google.visualization.GeoChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+    }
+</script>
+<style>
+    .loader {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        border: 10px solid #929292;
+        border-top: 10px solid #2197f2;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
 {% endblock %}

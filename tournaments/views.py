@@ -1,14 +1,15 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from django.http import HttpResponse
 from .models import Game, Tournament, Player
 from .forms import TournamentForm, PlayerForm
-# Create your views here.
 from django.db.models import Case, When, Value, CharField
 import firebase_admin
 from firebase_admin import credentials, firestore
-from django.contrib.auth.decorators import login_required
 from firebase_admin import storage
-
+from datetime import datetime, timedelta
+import json
 
 
 cred = credentials.Certificate("credentialsFirestore.json")
@@ -17,9 +18,20 @@ firebase_admin.initialize_app(cred, {
 })
 bucket = storage.bucket()
 db=firestore.client()
-# @login_required
+
+def homeClient(request):
+    return render(request, 'home/home-client.html')
+def loginClient(request):
+    return render(request, 'registration/login.html')
+
 def homeAdmin(request):
-    return render(request, 'pages/home-admin.html')
+    firestore_users = get_all_users() # Obtiene los datos de Firestore
+    firestore_users_json = json.dumps(firestore_users) # Convierte los datos a JSON
+    return render(request, 'pages/home-admin.html', {'firestore_users_json': firestore_users_json})
+
+def logoutAdmin(request):
+    logout(request)
+    return redirect('/accounts/login/?next=/home-admin')
 def get_all_users():
     users_ref = db.collection('user')
     users = users_ref.stream()
@@ -56,7 +68,7 @@ def playersList(request):
 #     player = Player.objects.get(id=id)
 #     player.delete()
 #     return redirect('player-list')
-
+@login_required
 def pointsView(request):
     games = Game.objects.all()
     for game in games:
@@ -64,11 +76,12 @@ def pointsView(request):
     firestore_users = get_all_users() # Obtiene los datos de Firestore
     return render(request, 'points/index.html', {'games': games, 'firestore_users': firestore_users})
 
-# @login_required
+@login_required
 def gameList(request):
     games = Game.objects.all()
     return render(request, 'games/index.html', {'games': games})
 
+@login_required
 def tournamentList(request):
     games = Game.objects.all()
     for game in games:
@@ -77,42 +90,111 @@ def tournamentList(request):
       game.tournaments_ended = Tournament.objects.filter(game=game, status='ended')
     return render(request, 'tournaments/index.html', {'games': games})
 
+@login_required
 def createTournament(request):
     games = Game.objects.filter(status=1)
     formTournament = TournamentForm(request.POST or None, request.FILES or None)
     if formTournament.is_valid():
-        tournament = formTournament.save()
-        
+        tournament = formTournament.save(commit=False)
+        date_str = formTournament.cleaned_data.get('date')
+        time_str = formTournament.cleaned_data.get('time')
+
+        # Combina la fecha y hora en un solo objeto datetime
+        date_time = datetime.strptime(f'{date_str} {time_str}', '%Y-%m-%d %H:%M:%S')
+        date_time_plus_5_hours = date_time + timedelta(hours=5)
+
+        image = request.FILES.get('image')
+        if image:
+            image.seek(0)
+            blob = bucket.blob(f'tournaments/{image.name}')
+            blob.upload_from_file(image, content_type=image.content_type)
+            original_url = blob.media_link
+            modified_url = original_url.replace('storage.googleapis.com/download/storage/v1/', 'firebasestorage.googleapis.com/v0/')
+        else:
+            modified_url = 'imageurl.com'
+
+        # Genera un ID único para el documento en Firestore
+        tournament_id = db.collection('tournaments').document().id
+
         data = {
             'creator':'XxETDfQHDSB4lnLeDY0y',
             'name': tournament.name,
             'status': tournament.status,
             'game': tournament.game.UIDGame if tournament.game else None,
-            'date': '2024-02-01',
+            'date': date_time_plus_5_hours,
             'inscribedPlayers':[],
-            'players': tournament.max_participants,
+            'players': tournament.players,
             'points': tournament.points,
             'rules': tournament.rules,
             'url': tournament.url,
-            'imageURL': 'imageurl.com' 
+            'imageURL': modified_url
         }
-        db.collection('tournaments').add(data)
+        # Usa el ID generado para crear el documento en Firestore
+        db.collection('tournaments').document(tournament_id).set(data)
+
+        # Actualiza el modelo Tournament en Django con el UID del documento y el valor de modified_url
+        tournament.uidRegister = tournament_id
+        tournament.imageURL = modified_url
+        tournament.save() # Ahora guarda el torneo con los datos de Firestore
+
         return redirect('tournament-list')
     else:
         print('Errores de formulario', formTournament.errors,)
     return render(request, 'tournaments/create.html', {'formTournament': formTournament, 'games': games})
 
+@login_required
 def editTournament(request, id):
     tournament = Tournament.objects.get(id=id)
-    games = Game.objects.filter(status=1) # Asegúrate de incluir esta línea
+    games = Game.objects.filter(status=1)
+    game_id = tournament.game_id # Obtener el game_id del torneo registrado
+    
+    # Filtrar la lista de juegos para ubicar el juego correspondiente al game_id
+    game_selected = games.filter(id=game_id).first()
+    
+    # Obtener los juegos restantes (que no son el juego seleccionado)
+    other_games = games.exclude(id=game_id)
+    
+    # Concatenar el juego seleccionado y los juegos restantes
+    games_ordered = [game_selected] + list(other_games)
+    
     formTournament = TournamentForm(request.POST or None, request.FILES or None, instance=tournament)
-    print(formTournament)
     if formTournament.is_valid() and request.POST:
         formTournament.save()
+        date_str = formTournament.cleaned_data.get('date')
+        time_str = formTournament.cleaned_data.get('time')
+
+        # Combina la fecha y hora en un solo objeto datetime
+        date_time = datetime.strptime(f'{date_str} {time_str}', '%Y-%m-%d %H:%M:%S')
+        date_time_plus_5_hours = date_time + timedelta(hours=5)
+
+        # Obtiene la referencia al documento del torneo en Firestore usando el UID almacenado
+        tournament_ref = db.collection('tournaments').document(tournament.uidRegister)
+        
+        # Obtiene los datos actuales del documento en Firestore
+        current_data = tournament_ref.get().to_dict()
+        
+        # Prepara los datos para actualizar en Firestore, manteniendo inscribedPlayers sin cambios
+        data = {
+            'creator': 'XxETDfQHDSB4lnLeDY0y',
+            'name': tournament.name,
+            'status': tournament.status,
+            'game': tournament.game.UIDGame if tournament.game else None,
+            'date': date_time_plus_5_hours,
+            'inscribedPlayers': current_data.get('inscribedPlayers', []), 
+            'players': tournament.players,
+            'points': tournament.points,
+            'rules': tournament.rules,
+            'url': tournament.url,
+            'imageURL': tournament.imageURL
+        }
+        
+        # Actualiza el documento en Firestore
+        tournament_ref.set(data)
+        
         return redirect('tournament-list')
     else:
         print("Datos no ingresados")
-    return render(request, 'tournaments/edit.html', {'formTournament': formTournament, 'games': games, 'is_edit': True})
+    return render(request, 'tournaments/edit.html', {'formTournament': formTournament, 'games': games_ordered, 'is_edit': True})
 
 def deleteTournament(request, id):
     tournament = Tournament.objects.get(id=id)
@@ -120,7 +202,7 @@ def deleteTournament(request, id):
     return redirect('tournament-list')
 
 
-
+@login_required
 def reportList(request):
     reports = [
         {
@@ -128,24 +210,31 @@ def reportList(request):
             'player_id': 1,
             'description': 'Descripción del reporte 1',
             'status': 'Pendiente',
-            'image_url': 'ruta/a/la/imagen1.jpg'
+            'image_url': 'ruta/a/la/imagen1.jpg',
+            'date': '01-01-2024',
+            'status': 'Pendiente',
         },
         {
             'title': 'Reporte 2',
             'player_id': 2,
             'description': 'Descripción del reporte 2',
             'status': 'Pendiente',
-            'image_url': 'ruta/a/la/imagen2.jpg'
+            'image_url': 'ruta/a/la/imagen2.jpg',
+            'date': '01-01-2024',
+            'status': 'Aprobado',
         },
         {
             'title': 'Reporte 3',
             'player_id': 3,
             'description': 'Descripción del reporte 3',
             'status': 'Pendiente',
-            'image_url': 'ruta/a/la/imagen2.jpg'
+            'image_url': 'ruta/a/la/imagen2.jpg',
+            'date': '01-01-2024',
+            'status': 'Rechazado',
         },
     ]
     return render(request, 'reports/index.html',  {'reports': reports})
+@login_required
 def rangeList(request):
     ranges = [
         {

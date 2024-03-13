@@ -2,8 +2,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.homeAdmin),
+    path('home-client', views.homeClient, name='home-client'),
+    path('accounts/login/?next=/home-admin', views.loginClient, name='accounts/login/?next=/home-admin'),
+    # path('', views.homeAdmin),
     path('home-admin', views.homeAdmin, name='home-admin'),
+    path('logoutAdmin', views.logoutAdmin, name='logoutAdmin'),
     path('games/', views.gameList, name='game-list'),
     # path('create-game/', views.createGame, name='create-game'),
     path('tournaments/', views.tournamentList, name='tournament-list'),

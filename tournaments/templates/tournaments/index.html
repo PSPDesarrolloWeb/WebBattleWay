@@ -29,7 +29,7 @@
                         <img src="{{ tournament.image.url }}" alt="Creado" height="180px">
                         <br>
                         <h3 style="text-align: center;">{{ tournament.name }}</h3>
-                        <p style="text-align: center;">{{ tournament.date }} {{ tournament.time|time:'h:i A' }}</p>
+                        <p style="text-align: center;">{{ tournament.date }} - {{ tournament.time|time:'h:i A' }}</p>
                         <a href="" style="position: absolute; top: 0; right: 0;">
                             <div class="button-container"
                                 style="position: absolute; top: 0; right: 0; display: flex; flex-direction: column; align-items: flex-end; margin-top: 0px;">
@@ -54,14 +54,15 @@
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="deleteConfirmationModalLabel-{{ tournament.id }}">¿Estás seguro de eliminar este
+                                <h5 class="modal-title" id="deleteConfirmationModalLabel-{{ tournament.id }}">¿Estás
+                                    seguro de eliminar este
                                     torneo?</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <!-- Aquí insertamos el nombre del torneo usando Django templating -->
-                                <p>Estás a punto de eliminar el torneo <strong>{{ tournament.name }}</strong>. ¿Estás seguro?</p>
+                                <p>Estás a punto de eliminar el torneo <strong>{{ tournament.name }}</strong>. ¿Estás
+                                    seguro?</p>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary"
@@ -100,7 +101,48 @@
                         <img src="{{ tournament.image.url }}" alt="Creado" height="180px">
                         <br>
                         <h3 style="text-align: center;">{{ tournament.name }}</h3>
-                        <p style="text-align: center;">{{ tournament.date }} {{ tournament.time|time:'h:i A' }}</p>
+                        <p style="text-align: center;">{{ tournament.date }} - {{ tournament.time|time:'h:i A' }}</p>
+                        <a href="" style="position: absolute; top: 0; right: 0;">
+                            <div class="button-container"
+                                style="position: absolute; top: 0; right: 0; display: flex; flex-direction: column; align-items: flex-end; margin-top: 0px;">
+                                <a href="{% url 'edit-tournament' tournament.id %}">
+                                    <button type="button" class="btn btn-dark">
+                                        <i class="bi bi-pencil"></i> <!-- Icono de editar -->
+                                    </button>
+                                </a>
+                                <!-- Botón para eliminar el torneo -->
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteConfirmationModal-{{ tournament.id }}"
+                                    data-tournament-name="{{ tournament.name }}">
+                                    <i class="bi bi-trash"></i> <!-- Icono de borrar -->
+                                </button>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <!-- Modal de confirmación de eliminación -->
+                <div class="modal fade" id="deleteConfirmationModal-{{ tournament.id }}" tabindex="-1"
+                    aria-labelledby="deleteConfirmationModalLabel-{{ tournament.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteConfirmationModalLabel-{{ tournament.id }}">¿Estás
+                                    seguro de eliminar este
+                                    torneo?</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Estás a punto de eliminar el torneo <strong>{{ tournament.name }}</strong>. ¿Estás
+                                    seguro?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <a id="deleteTournamentLink" href="{% url 'delete-tournament' tournament.id %}"
+                                    class="btn btn-danger">Eliminar</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -124,7 +166,49 @@
                         <img src="{{ tournament.image.url }}" alt="Creado" height="180px">
                         <br>
                         <h3 style="text-align: center;">{{ tournament.name }}</h3>
-                        <p style="text-align: center;">{{ tournament.date }} {{ tournament.time|time:'h:i A' }}</p>
+                        <p style="text-align: center;">{{ tournament.date }} - {{ tournament.time|time:'h:i A' }}</p>
+                        <a href="" style="position: absolute; top: 0; right: 0;">
+                            <div class="button-container"
+                                style="position: absolute; top: 0; right: 0; display: flex; flex-direction: column; align-items: flex-end; margin-top: 0px;">
+                                <a href="{% url 'edit-tournament' tournament.id %}">
+                                    <button type="button" class="btn btn-dark">
+                                        <i class="bi bi-pencil"></i> <!-- Icono de editar -->
+                                    </button>
+                                </a>
+                                <!-- Botón para eliminar el torneo -->
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteConfirmationModal-{{ tournament.id }}"
+                                    data-tournament-name="{{ tournament.name }}">
+                                    <i class="bi bi-trash"></i> <!-- Icono de borrar -->
+                                </button>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <!-- Modal de confirmación de eliminación -->
+                <div class="modal fade" id="deleteConfirmationModal-{{ tournament.id }}" tabindex="-1"
+                    aria-labelledby="deleteConfirmationModalLabel-{{ tournament.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteConfirmationModalLabel-{{ tournament.id }}">¿Estás
+                                    seguro
+                                    de eliminar este
+                                    torneo?</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Estás a punto de eliminar el torneo <strong>{{ tournament.name }}</strong>. ¿Estás
+                                    seguro?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <a id="deleteTournamentLink" href="{% url 'delete-tournament' tournament.id %}"
+                                    class="btn btn-danger">Eliminar</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -136,6 +220,7 @@
                     <p class="card-text">No existen torneos finalizados para este juego</p>
                 </div>
             </div>
+
             {% endif %}
         </div>
     </div>
