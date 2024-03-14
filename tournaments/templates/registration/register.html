@@ -1,0 +1,78 @@
+{% extends "baseClient.html" %}
+{% block title %}Registro{% endblock %}
+{% block container %}
+<style>
+    .btn.btn-success:hover {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+</style>
+<br><br><br>
+<div class="card col-md-8" style="margin: 0 auto;">
+    <div class="card-header bg-dark text-white">
+        <h5 class="card-title text-center">Registrarse</h5>
+    </div>
+    <div class="card-body">
+        <form action="" method="POST">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col md-4">
+                    <div class="form-group">
+                        <label for="nombre"><i class="bi bi-person"></i> Nombre:</label>
+                        <input type="text" class="form-control" id="first_name" name="first_name">
+                    </div>
+                </div>
+                <div class="col md-4">
+                    <div class="form-group">
+                        <label for="nombre"><i class="bi bi-person"></i> Apellido:</label>
+                        <input type="text" class="form-control" id="last_name" name="last_name">
+                    </div>
+                </div>
+                <div class="col md-4">
+                    <div class="form-group">
+                        <label for="nombre"><i class="bi bi-person"></i> Correo electrónico:</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col md-6">
+                    <div class="form-group">
+                        <label for="nombre"><i class="bi bi-person"></i> Nombre de usuario:</label>
+                        <input type="text" class="form-control" id="username" name="username">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col md-6">
+                    <div class="form-group">
+                        <label for="nombre"><i class="bi bi-person"></i> Contraseña:</label>
+                        <input type="password" class="form-control" id="password1" name="password1">
+                    </div>
+                </div>
+                <div class="col md-6">
+                    <div class="form-group">
+                        <label for="nombre"><i class="bi bi-person"></i> Confirmar contraseña:</label>
+                        <input type="password" class="form-control" id="password2" name="password2">
+                    </div>
+                </div>
+            </div>
+            <!-- <table>
+                {{ form.as_table }}
+            </table> -->
+            <br>
+            <div class="d-flex justify-content-center">
+                <input type="reset" class="btn btn-secondary" value="Limpiar">
+                <input type="submit" class="btn btn-primary" value="Crear una cuenta">
+            </div>
+            <br>
+        </form>
+        <div class="d-flex justify-content-center">
+            <div class="buttons-container">
+                <span><a href="home-admin">¿Ya tienes una cuenta?</a></span>
+            </div>
+        </div>
+    </div>
+</div>
+<br><br>
+{% endblock %}

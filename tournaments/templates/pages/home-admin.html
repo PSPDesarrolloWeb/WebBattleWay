@@ -16,7 +16,12 @@
 
     function drawRegionsMap() {
         document.querySelector('.loader').style.display = 'none';
+        updateChartData();
+    }
 
+    function updateChartData() {
+        // Realizar la consulta a Firestore aquí y actualizar los datos del gráfico
+        // Este es un ejemplo simplificado, necesitarás implementar la lógica de consulta a Firestore
         var firestoreData = JSON.parse('{{ firestore_users_json|escapejs }}');
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Country');
@@ -47,6 +52,9 @@
 
         var chart = new google.visualization.GeoChart(document.getElementById('chart_div'));
         chart.draw(data, options);
+
+        // Actualizar los datos del gráfico cada 5 minutos
+        setTimeout(updateChartData, 300000);
     }
 </script>
 <style>

@@ -45,6 +45,7 @@
                 <th scope="col"><i class="bi bi-person-fill"></i> Usuario</th>
                 <th scope="col"><i class="bi bi-envelope-fill"></i> Email</th>
                 <th scope="col"><i class="bi bi-whatsapp"></i> Contacto</th>
+                <th scope="col"><i class="bi bi-globe-americas"></i> País</th>
                 <th scope="col"><i class="bi bi-star-fill"></i> Puntaje</th>
                 <th scope="col"><i class="bi bi-flag-fill"></i> Reporte</th>
             </tr>
@@ -56,6 +57,7 @@
                 <td><img src="{{ user.photoURL }}" alt="Perfil" height="25px"> {{ user.username }}</td>
                 <td style="text-align: center;">{{ user.email }}</td>
                 <td style="text-align: center;">{{ user.phone }}</td>
+                <td style="text-align: center;">{{ user.country }}</td>
                 <td style="text-align: center;">{{ user.points }}</td>
                 <td style="width: 160px; text-align: center;">
                     <a href="#" class="btn btn-danger icon-btn" data-bs-toggle="modal"

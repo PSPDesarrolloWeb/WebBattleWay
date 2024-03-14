@@ -1,16 +1,16 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
+from django.contrib.auth import logout, login, authenticate
 from django.http import HttpResponse
 from .models import Game, Tournament, Player
-from .forms import TournamentForm, PlayerForm
+from .forms import TournamentForm, PlayerForm, AdminForm
+from django.contrib.auth.models import User
 from django.db.models import Case, When, Value, CharField
 import firebase_admin
 from firebase_admin import credentials, firestore
 from firebase_admin import storage
 from datetime import datetime, timedelta
 import json
-
 
 cred = credentials.Certificate("credentialsFirestore.json")
 firebase_admin.initialize_app(cred, {
@@ -21,12 +21,30 @@ db=firestore.client()
 
 def homeClient(request):
     return render(request, 'home/home-client.html')
+
+def registerAdmin(request):
+    if request.method == 'POST':
+        # Extrae los datos del formulario
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        username = request.POST.get('username')
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+        # if password1 != password2:
+        #     return redirect('register')  
+        user = User.objects.create_user(username=username, email=email, password=password1, first_name=first_name, last_name=last_name)
+        user = authenticate(request, username=username, password=password1)
+        if user is not None:
+            login(request, user)
+            return homeAdmin(request)
+    return render(request, 'registration/register.html')
 def loginClient(request):
     return render(request, 'registration/login.html')
 
 def homeAdmin(request):
-    firestore_users = get_all_users() # Obtiene los datos de Firestore
-    firestore_users_json = json.dumps(firestore_users) # Convierte los datos a JSON
+    firestore_users = get_all_users() 
+    firestore_users_json = json.dumps(firestore_users)
     return render(request, 'pages/home-admin.html', {'firestore_users_json': firestore_users_json})
 
 def logoutAdmin(request):
@@ -75,6 +93,31 @@ def pointsView(request):
         game.tournaments_ended = Tournament.objects.filter(game=game, status='ended')
     firestore_users = get_all_users() # Obtiene los datos de Firestore
     return render(request, 'points/index.html', {'games': games, 'firestore_users': firestore_users})
+
+def update_points(request):
+    if request.method == 'POST':
+        username = request.POST.get('participant')
+        score = int(request.POST.get('score'))
+        
+        # Buscar el usuario en Firestore
+        users_ref = db.collection('user')
+        user_query = users_ref.where('username', '==', username).stream()
+        user_doc = None
+        for user in user_query:
+            user_doc = user
+            break
+        
+        if user_doc:
+            # Actualizar el campo points incrementando el valor actual
+            user_ref = users_ref.document(user_doc.id)
+            user_ref.update({
+                'points': firestore.Increment(score)
+            })
+            return redirect('points')
+        else:
+            return redirect('error-page')
+    
+    return redirect('home-page')
 
 @login_required
 def gameList(request):

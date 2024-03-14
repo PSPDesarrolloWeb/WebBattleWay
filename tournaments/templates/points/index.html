@@ -131,35 +131,37 @@
                 <h6>Torneo: {{tournament.name}}</h6>
                 <span>Puntaje: {{tournament.points}}</span>
             </div>
-            <div class="modal-body">
-                <div class="container">
-                    <div class="row mb-3" id="inputRow">
-                        <div class="col-md-5">
-                            <label for="description">Descripción</label>
-                            <input type="text" class="form-control" id="description" name="description">
-                        </div>
-                        <div class="col-md-5">
-                            <label for="participant">Participante</label>
-                            <select class="form-select" id="participant" name="participant">
-                                <option selected>Seleccione un participante</option>
-                                {% for user in firestore_users %}
+            <form method="post" action="{% url 'updatePoints' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="container">
+                        <div class="row mb-3" id="inputRow">
+                            <div class="col-md-5">
+                                <label for="description">Descripción</label>
+                                <input type="text" class="form-control" id="description" name="description">
+                            </div>
+                            <div class="col-md-5">
+                                <label for="participant">Participante</label>
+                                <select class="form-select" id="participant" name="participant">
+                                    <option selected>Seleccione un participante</option>
+                                    {% for user in firestore_users %}
                                     <option value="{{ user.username }}">{{ user.username }}</option>
-                                {% endfor %}
-                            </select>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="score">Puntaje</label>
+                                <input type="number" class="form-control" id="score" name="score">
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <label for="score">Puntaje</label>
-                            <input type="number" class="form-control" id="score" name="score">
-                        </div>
-
+                        <button type="button" class="btn btn-light" id="addRow">Añadir otra fila</button>
                     </div>
-                    <button type="button" class="btn btn-primary" id="addRow">Añadir otra fila</button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Regresar</button>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Asignar puntaje</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -197,21 +199,26 @@
             var row = document.createElement('div');
             row.className = 'row mb-3';
             row.innerHTML = `
-                <div class="col-md-4">
-                    <label for="description">Descripción</label>
-                    <input type="text" class="form-control" id="description" name="description">
-                </div>
-                <div class="col-md-4">
-                    <label for="score">Puntaje</label>
-                    <input type="number" class="form-control" id="score" name="score">
-                </div>
-                <div class="col-md-4">
-                    <label for="participant">Participante</label>
-                    <select class="form-select" id="participant" name="participant">
-                        <option selected>Seleccione un participante</option>
-                        <!-- Aquí puedes añadir opciones para los participantes -->
-                    </select>
-                </div>
+            <div class="row mb-3" id="inputRow">
+                        <div class="col-md-5">
+                            <label for="description">Descripción</label>
+                            <input type="text" class="form-control" id="description" name="description">
+                        </div>
+                        <div class="col-md-5">
+                            <label for="participant">Participante</label>
+                            <select class="form-select" id="participant" name="participant">
+                                <option selected>Seleccione un participante</option>
+                                {% for user in firestore_users %}
+                                    <option value="{{ user.username }}">{{ user.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="score">Puntaje</label>
+                            <input type="number" class="form-control" id="score" name="score">
+                        </div>
+
+                    </div>
             `;
             document.getElementById('inputRow').parentNode.insertBefore(row, document.getElementById('inputRow').nextSibling);
         });
