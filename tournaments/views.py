@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout, login, authenticate
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .models import Game, Tournament, Player
 from .forms import TournamentForm, PlayerForm, AdminForm
 from django.contrib.auth.models import User
@@ -11,6 +11,10 @@ from firebase_admin import credentials, firestore
 from firebase_admin import storage
 from datetime import datetime, timedelta
 import json
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from io import BytesIO
 
 cred = credentials.Certificate("credentialsFirestore.json")
 firebase_admin.initialize_app(cred, {
@@ -55,13 +59,19 @@ def get_all_users():
     users = users_ref.stream()
     users_data = []
     for user in users:
-        users_data.append(user.to_dict())
+        user_data = user.to_dict()
+        user_data['uid'] = user.id 
+        users_data.append(user_data)
     return users_data
 
 def playersList(request):
+    if request.method == 'POST':
+        filtered_data = request.POST.getlist('filteredRows[]')
+        print(filtered_data)
+        return JsonResponse({'success': True})
+
     players = Player.objects.all()
-    print(players)
-    firestore_users = get_all_users() # Obtiene los datos de Firestore
+    firestore_users = get_all_users()
 
     return render(request, 'players/index.html', {'players': players, 'firestore_users': firestore_users})
 
@@ -312,4 +322,25 @@ def rangeList(request):
         },
     ]
     return render(request, 'ranges/index.html', {'ranges': ranges})
+def reportView(request):
+    firestore_users = get_all_users() # Obtiene los datos de Firestore
+    return render(request,'players/report.html',{'firestore_users': firestore_users})
 
+def generate_pdf(request):
+    firestore_users = get_all_users()
+    current_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    template_path = 'players/report.html'
+    template = get_template(template_path)
+    html = template.render({'firestore_users': firestore_users})
+
+    result = BytesIO()
+
+    pisa_status = pisa.CreatePDF(html, dest=result)
+
+    if pisa_status.err:
+        return HttpResponse('Error al generar PDF: %s' % pisa_status.err)
+    response = HttpResponse(result.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="reporteUsuarios_{current_datetime}.pdf"'
+
+    return response

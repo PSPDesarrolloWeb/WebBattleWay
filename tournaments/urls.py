@@ -15,7 +15,10 @@ urlpatterns = [
     path('edit-tournament/<int:id>', views.editTournament, name='edit-tournament'),
     path('delete-tournament/<int:id>', views.deleteTournament, name='delete-tournament'),
     path('players/', views.playersList, name='player-list'),
+    path('reportUsers/', views.reportView, name='reportUsers'),
+    path('pdfUsers/', views.generate_pdf, name='pdfUsers'),
     path('updatePoints/', views.update_points, name='updatePoints'),
+    
     # path('create-player/', views.createPlayer, name='create-player'),
     # path('edit-player/<int:id>', views.editPlayer, name='edit-player'),
     # path('delete-player/<int:id>', views.deletePlayer, name='delete-player'),

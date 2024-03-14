@@ -1,0 +1,68 @@
+<style>
+    .table {
+        border-collapse: collapse;
+    }
+
+    .table th,
+    .table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .table th {
+        background-color: #f2f2f2;
+    }
+
+    .main-container {
+        display: flex;
+        flex-direction: column;
+        /* Asegura que los elementos se apilen verticalmente */
+        align-items: center;
+        /* Centra los elementos horizontalmente */
+    }
+
+    .header-line {
+        display: flex;
+        justify-content: space-between;
+        /* Añade espacio entre los elementos */
+        width: 100%;
+        /* Asegura que el contenedor ocupe todo el ancho disponible */
+        margin-top: 20px;
+        /* Añade un margen superior para separar el h1 del h2 y h3 */
+    }
+</style>
+<div class="main-container">
+    <h1>Battle Way REPORTES</h1>
+    <div class="header-line">
+        <h2>Usuarios registrados en la app</h2>
+        <h3>Fecha de creación REPORTE: {% now "d/m/Y" %}</h3>
+    </div>
+</div>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr style="text-align: center;">
+                <th scope="col">N°</th>
+                <th scope="col"> Usuario</th>
+                <th scope="col">Email</th>
+                <th scope="col">Contacto</th>
+                <th scope="col"> País</th>
+                <th scope="col">Puntaje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in firestore_users %}
+            <tr>
+                <td style="width: 50px; text-align: center;">{{ forloop.counter }}</td>
+                <td style="text-align: center;">{{ user.username }}</td>
+                <td style="text-align: center;">{{ user.email }}</td>
+                <td style="text-align: center;">{{ user.phone }}</td>
+                <td style="text-align: center;">{{ user.country }}</td>
+                <td style="text-align: center;">{{ user.points }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

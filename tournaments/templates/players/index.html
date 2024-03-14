@@ -5,14 +5,11 @@
 <style>
     .icon-btn {
         padding: 0.01rem 0.40rem;
-        /* Ajusta el relleno interno para minimizarlo */
         border-radius: 0.25rem;
-        /* Ajusta el radio del borde para que coincida con el nuevo relleno */
     }
 
     .icon-btn i {
         font-size: 1.1rem;
-        /* Ajusta el tamaño del ícono para agrandarlo */
     }
 
     .btn-primary {
@@ -24,8 +21,19 @@
     .btn-primary:focus,
     .btn-primary:active {
         background-color: #1a7bb9 !important;
-        /* Un color más oscuro para el hover, focus y active */
         border-color: #1a7bb9 !important;
+    }
+
+    .btn-danger {
+        background-color: #f54336 !important;
+        border-color: #f54336 !important;
+    }
+
+    .btn-danger:hover,
+    .btn-danger:focus,
+    .btn-danger:active {
+        background-color: #d3362d !important;
+        border-color: #d3362d !important;
     }
 </style>
 <br>
@@ -33,7 +41,10 @@
 <div class="input-group mb-3">
     <input type="text" class="form-control" id="searchInput" placeholder="Buscar por nombre de usuario o email">
     <button class="btn btn-outline-secondary" type="button" id="searchButton">Buscar</button>
+    <!-- Botón para generar el PDF -->
+    <a href="{% url 'pdfUsers' %}" class="btn btn-primary">Generar PDF</a>
 </div>
+
 
 <!-- Ahora, vamos a mostrar los usuarios de Firestore -->
 <h2><i class="bi bi-people-fill" style="color:#f54336;"></i> Usuarios registrados</h2>
@@ -60,72 +71,169 @@
                 <td style="text-align: center;">{{ user.country }}</td>
                 <td style="text-align: center;">{{ user.points }}</td>
                 <td style="width: 160px; text-align: center;">
-                    <a href="#" class="btn btn-danger icon-btn" data-bs-toggle="modal"
-                        data-bs-target="#reportModal{{ forloop.counter }}">
+                    <a href="#addReportUserModal-{{ user.uid }}" data-bs-toggle="modal" class="btn btn-danger icon-btn"
+                        data-bs-toggle="modal">
                         <i class="bi bi-person-fill-slash"></i>
                     </a>
-                    <a href="#" class="btn btn-primary icon-btn" data-bs-toggle="modal"
-                        data-bs-target="#reportModal{{ forloop.counter }}">
+                    <a href="#removeReportUserModal-{{ user.uid }}" data-bs-toggle="modal"
+                        class="btn btn-primary icon-btn" data-bs-toggle="modal">
                         <i class="bi bi-person-fill-check"></i>
                     </a>
-
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
 <!-- Modal de Reporte -->
-{% for data in players %}
-<div class="modal fade" id="reportModal{{ forloop.counter }}" tabindex="-1"
-    aria-labelledby="reportModal{{ forloop.counter }}Label" aria-hidden="true">
+{% for user in firestore_users %}
+<div class="modal fade" id="addReportUserModal-{{ user.uid }}" tabindex="-1"
+    aria-labelledby="gameModalLabel-{{ game.id }}" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="reportModal{{ forloop.counter }}Label">Registrar un reporte de jugador</h5>
+                <h5 class="modal-title" id="reportModal{{ forloop.counter }}Label">Reportar jugador</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form>
+                    <div class="form-group">
+                        <label for="descripcion"><i class="bi bi-person"></i> Jugador</label>
+                        <input type="text" class="form-control" id="descripcion" name="descripcion"
+                            value="{{ user.username }}" disabled>
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <label for="descripcion"><i class="bi bi-justify-left"></i> Descripción del reporte</label>
+                        <input type="text" class="form-control" id="descripcion" name="descripcion">
+                    </div>
+                    <hr>
                     <div class="mb-3">
-                        <label for="reportNumber" class="form-label">Selecciona el número de reporte</label>
-                        <select class="form-select" id="reportNumber">
-                            <option value="1">Reporte: #5485</option>
-                            <option value="2">Reporte: #477</option>
-                            <option value="3">Reporte: #20</option>
-                        </select>
-                        <p>Al registrar y seleccionar este reporte, confirmas que lo has revisado minuciosamente y
-                            das validez a que el jugador ha cometido una falta. Esto resultará en 1 de 5 sanciones al
+                        <p style="text-align: justify;">Al registrar este reporte, confirmas que has revisado
+                            minuciosamente el caso y das validez a que el jugador ha cometido una falta. Esto resultará
+                            en 1 de 5 sanciones al
                             jugador.</p>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                    data-bs-target="#confirmModal{{ forloop.counter }}">Reportar</button>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                    data-bs-target="#confirmModal{{ user.uid }}">Reportar</button>
+
             </div>
         </div>
     </div>
 </div>
 
+
 <!-- Modal de Confirmación -->
-<div class="modal fade" id="confirmModal{{ forloop.counter }}" tabindex="-1"
-    aria-labelledby="confirmModal{{ forloop.counter }}Label" aria-hidden="true">
+<div class="modal fade" id="confirmModal{{ user.uid }}" tabindex="-1" aria-labelledby="confirmModal{{ user.uid }}Label"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmModal{{ forloop.counter }}Label">¿Estás seguro?</h5>
+                <h5 class="modal-title" id="confirmModal{{ user.uid }}Label">¿Estás seguro?</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="">Estas a punto de registrar 1 de 5 reportes a <strong>{{ user.username }}</strong></label>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger">Sí, estoy seguro</button>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                    data-bs-target="#successModal">Sí, estoy seguro</button>
             </div>
         </div>
     </div>
 </div>
+<!-- Modal de Éxito para Reporte -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Reporte Exitoso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                El reporte se ha registrado exitosamente.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de remover Reporte -->
+
+<div class="modal fade" id="removeReportUserModal-{{ user.uid }}" tabindex="-1"
+    aria-labelledby="gameModalLabel-{{ game.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportModal{{ forloop.counter }}Label">Remover reporte de jugador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="descripcion"><i class="bi bi-person"></i> Jugador</label>
+                        <input type="text" class="form-control" id="descripcion" name="descripcion"
+                            value="{{ user.username }}" disabled>
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <label for="descripcion"><i class="bi bi-justify-left"></i> Selecciona el reporte</label>
+                        <select class="form-select">
+                            <option value="1">Reporte 1 - 13/03/2024</option>
+                            <option value="2">Reporte 2 - 14/03/2024</option>
+                            <option value="3">Reporte 3 - 15/03/2024</option>
+                            <option value="4">Reporte 4 - 16/03/2024</option>
+                            <option value="5">Reporte 5 - 17/03/2024</option>
+                        </select>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <p style="text-align: justify;">Al registrar este reporte, confirmas que has revisado
+                            minuciosamente el caso y das validez a que el jugador ha cometido una falta. Esto resultará
+                            en 1 de 5 sanciones al
+                            jugador.</p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <!-- Botón para remover el reporte -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#successModal">Remover</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal de Éxito -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Éxito</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                El reporte ha sido removido exitosamente.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 {% endfor %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('searchInput');
@@ -140,7 +248,8 @@
                 const username = row.cells[1].textContent.toLowerCase();
                 const email = row.cells[2].textContent.toLowerCase();
                 const phone = row.cells[3].textContent.toLowerCase();
-                return username.includes(searchValue) || email.includes(searchValue) || phone.includes(searchValue);
+                const country = row.cells[4].textContent.toLowerCase();
+                return username.includes(searchValue) || email.includes(searchValue) || phone.includes(searchValue) || country.includes(searchValue);
             });
             // Limpiar la tabla
             tableBody.innerHTML = '';
@@ -158,4 +267,54 @@
         searchButton.addEventListener('click', filterRows);
     });
 </script>
+<!-- <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const tableBody = document.querySelector('.table-responsive tbody');
+        const originalRows = Array.from(tableBody.rows); // Guarda las filas originales
+        let filteredRows = []; // Variable para almacenar las filas filtradas
+
+        // Función para filtrar las filas de la tabla
+        function filterRows() {
+            const searchValue = searchInput.value.toLowerCase();
+            filteredRows = originalRows.filter(row => {
+                const username = row.cells[1].textContent.toLowerCase();
+                const email = row.cells[2].textContent.toLowerCase();
+                const phone = row.cells[3].textContent.toLowerCase();
+                const country = row.cells[4].textContent.toLowerCase();
+                return username.includes(searchValue) || email.includes(searchValue) || phone.includes(searchValue) || country.includes(searchValue);
+            });
+            renderFilteredRows(); // Renderiza las filas filtradas
+        }
+
+        // Función para renderizar las filas filtradas
+        function renderFilteredRows() {
+            tableBody.innerHTML = '';
+            filteredRows.forEach(row => tableBody.appendChild(row));
+        }
+
+        // Función para enviar las filas filtradas al backend
+        // Función para enviar las filas filtradas al backend
+        function sendFilteredRowsToBackend() {
+            const form = document.getElementById('filteredDataForm');
+            filteredRows.forEach(row => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'filteredRows[]';
+                input.value = row.outerHTML;
+                form.appendChild(input);
+            });
+            form.submit(); // Envía el formulario al backend
+        }
+
+        searchInput.addEventListener('input', filterRows); // Filtra las filas cuando se ingresa texto en el campo de búsqueda
+        searchButton.addEventListener('click', function () {
+            filterRows(); // Llama a la función para filtrar las filas cuando se hace clic en el botón de búsqueda
+            sendFilteredRowsToBackend(); // Llama a la función para enviar las filas filtradas al backend
+        });
+    });
+
+</script> -->
+
 {% endblock %}
