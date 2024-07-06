@@ -139,6 +139,10 @@
                             <div class="col-md-5">
                                 <label for="description">Descripción</label>
                                 <input type="text" class="form-control" id="description" name="description">
+                                <input type="hidden" name="gameId" value="{{ game.UIDGame }}">
+                                <input type="hidden" name="gameName" value="{{ game.name }}">
+                                <input type="hidden" name="tournamentId" value="{{ tournament.id }}">
+                                <input type="hidden" name="tournamentName" value="{{ tournament.name }}">
                             </div>
                             <div class="col-md-5">
                                 <label for="participant">Participante</label>
@@ -178,51 +182,37 @@
 {% endfor %}
 {% endif %}
 {% endfor %}
+<!-- Dentro de tu bloque 'container' en tu template Django -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var editTournamentModals = document.querySelectorAll('.modal[id^="editTournamentModal-"]');
+
         editTournamentModals.forEach(function (modal) {
+            var addRowButton = modal.querySelector('#addRow');
+
+            addRowButton.addEventListener('click', function () {
+                var inputRow = modal.querySelector('#inputRow');
+                var clone = inputRow.cloneNode(true);
+                clone.classList.add('cloned-row'); // Agregar una clase para identificar las filas clonadas
+                
+                // Limpiar los campos clonados
+                clone.querySelectorAll('input[type="text"], input[type="number"], select').forEach(function (input) {
+                    input.value = ''; // Vaciar el valor de los campos de texto, números y select
+                });
+
+                inputRow.parentNode.insertBefore(clone, addRowButton);
+            });
+
             modal.addEventListener('hidden.bs.modal', function () {
-                var gameModalId = modal.querySelector('[data-game-modal-id]').getAttribute('data-game-modal-id');
-                var gameModal = document.getElementById(gameModalId);
-                if (gameModal) {
-                    var bootstrapModal = new bootstrap.Modal(gameModal);
-                    bootstrapModal.show();
-                }
+                // Eliminar todas las filas clonadas excepto la primera
+                var clonedRows = modal.querySelectorAll('.cloned-row');
+                clonedRows.forEach(function (row) {
+                    row.parentNode.removeChild(row);
+                });
             });
         });
     });
 </script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('addRow').addEventListener('click', function () {
-            var row = document.createElement('div');
-            row.className = 'row mb-3';
-            row.innerHTML = `
-            <div class="row mb-3" id="inputRow">
-                        <div class="col-md-5">
-                            <label for="description">Descripción</label>
-                            <input type="text" class="form-control" id="description" name="description">
-                        </div>
-                        <div class="col-md-5">
-                            <label for="participant">Participante</label>
-                            <select class="form-select" id="participant" name="participant">
-                                <option selected>Seleccione un participante</option>
-                                {% for user in firestore_users %}
-                                    <option value="{{ user.username }}">{{ user.username }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="score">Puntaje</label>
-                            <input type="number" class="form-control" id="score" name="score">
-                        </div>
 
-                    </div>
-            `;
-            document.getElementById('inputRow').parentNode.insertBefore(row, document.getElementById('inputRow').nextSibling);
-        });
-    });
-</script>
 
 {% endblock %}

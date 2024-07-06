@@ -104,29 +104,69 @@ def pointsView(request):
     firestore_users = get_all_users() # Obtiene los datos de Firestore
     return render(request, 'points/index.html', {'games': games, 'firestore_users': firestore_users})
 
+# Importa lo necesario para Firestore y otros módulos que uses
+from firebase_admin import firestore
+
 def update_points(request):
     if request.method == 'POST':
-        username = request.POST.get('participant')
-        score = int(request.POST.get('score'))
+        # Obtener datos del formulario
+        gameId = request.POST.get('gameId')
+        gameName = request.POST.get('gameName')
+        tournamentId = request.POST.get('tournamentId')
+        tournamentName = request.POST.get('tournamentName')
         
-        # Buscar el usuario en Firestore
-        users_ref = db.collection('user')
-        user_query = users_ref.where('username', '==', username).stream()
-        user_doc = None
-        for user in user_query:
-            user_doc = user
-            break
-        
-        if user_doc:
-            # Actualizar el campo points incrementando el valor actual
-            user_ref = users_ref.document(user_doc.id)
-            user_ref.update({
-                'points': firestore.Increment(score)
-            })
-            return redirect('points')
-        else:
-            return redirect('error-page')
-    
+        # Inicializar una lista para almacenar los datos de puntos de cada fila
+        points_data = []
+
+        # Obtener datos de cada fila clonada
+        descriptions = request.POST.getlist('description')
+        participants = request.POST.getlist('participant')
+        scores = request.POST.getlist('score')
+
+        # Iterar sobre las listas de descripciones, participantes y puntajes
+        for i in range(len(descriptions)):
+            description = descriptions[i]
+            participant = participants[i]
+            score = int(scores[i])
+
+            # Buscar el usuario en Firestore
+            users_ref = db.collection('user')
+            user_query = users_ref.where('username', '==', participant).stream()
+            user_doc = None
+
+            for user in user_query:
+                user_doc = user
+                break
+
+            if user_doc:
+                # Actualizar el campo points incrementando el valor actual
+                user_ref = users_ref.document(user_doc.id)
+                user_ref.update({
+                    'points': firestore.Increment(score)
+                })
+
+                # Agregar datos de puntos a la lista
+                points_data.append({
+                    'userId': user_doc.id,
+                    'points': score,
+                    'gameId': gameId,
+                    'gameName': gameName,
+                    'tournamentId': tournamentId,
+                    'tournamentName': tournamentName,
+                    'description': description,
+                    'timestamp': firestore.SERVER_TIMESTAMP
+                })
+            else:
+                # Manejar caso donde no se encuentra el usuario
+                return redirect('error-page')
+
+        # Crear registros en la colección pointsHistory de forma masiva
+        points_history_ref = db.collection('pointsHistory')
+        for data in points_data:
+            points_history_ref.add(data)
+
+        return redirect('points')
+
     return redirect('home-page')
 
 @login_required
