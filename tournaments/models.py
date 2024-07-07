@@ -35,6 +35,7 @@ class Tournament(models.Model):
     time = models.TimeField( verbose_name= 'Hora')
     players = models.IntegerField( null=True, blank=True, verbose_name= 'N° participantes')
     points = models.IntegerField( verbose_name= 'Puntaje')
+    avalaible_points = models.IntegerField( null=True, blank=True, verbose_name= 'Puntaje disponible')
     rules = models.TextField(max_length=3000, verbose_name= 'Reglamento')
     url = models.CharField(max_length=1000,  verbose_name= 'Link')
     imageURL = models.CharField(null=True, blank=True, max_length=1000,  verbose_name= 'Link Imagen Firestore')

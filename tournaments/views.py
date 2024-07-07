@@ -28,7 +28,6 @@ def homeClient(request):
 
 def registerAdmin(request):
     if request.method == 'POST':
-        # Extrae los datos del formulario
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
@@ -100,36 +99,38 @@ def playersList(request):
 def pointsView(request):
     games = Game.objects.all()
     for game in games:
-        game.tournaments_ended = Tournament.objects.filter(game=game, status='ended')
-    firestore_users = get_all_users() # Obtiene los datos de Firestore
+        ended_tournaments = Tournament.objects.filter(game=game, status='ended')
+        game.tournaments_ended = []
+        
+        for tournament in ended_tournaments:
+            firestore_tournament = db.collection('tournaments').document(tournament.uidRegister).get().to_dict()
+            if firestore_tournament:
+                tournament.inscribedPlayers = firestore_tournament.get('inscribedPlayers', [])
+            game.tournaments_ended.append(tournament)
+
+    firestore_users = get_all_users()
     return render(request, 'points/index.html', {'games': games, 'firestore_users': firestore_users})
 
-# Importa lo necesario para Firestore y otros módulos que uses
 from firebase_admin import firestore
 
 def update_points(request):
     if request.method == 'POST':
-        # Obtener datos del formulario
         gameId = request.POST.get('gameId')
         gameName = request.POST.get('gameName')
         tournamentId = request.POST.get('tournamentId')
         tournamentName = request.POST.get('tournamentName')
         
-        # Inicializar una lista para almacenar los datos de puntos de cada fila
         points_data = []
 
-        # Obtener datos de cada fila clonada
         descriptions = request.POST.getlist('description')
         participants = request.POST.getlist('participant')
         scores = request.POST.getlist('score')
 
-        # Iterar sobre las listas de descripciones, participantes y puntajes
         for i in range(len(descriptions)):
             description = descriptions[i]
             participant = participants[i]
             score = int(scores[i])
 
-            # Buscar el usuario en Firestore
             users_ref = db.collection('user')
             user_query = users_ref.where('username', '==', participant).stream()
             user_doc = None
@@ -139,13 +140,11 @@ def update_points(request):
                 break
 
             if user_doc:
-                # Actualizar el campo points incrementando el valor actual
                 user_ref = users_ref.document(user_doc.id)
                 user_ref.update({
                     'points': firestore.Increment(score)
                 })
 
-                # Agregar datos de puntos a la lista
                 points_data.append({
                     'userId': user_doc.id,
                     'points': score,
@@ -157,10 +156,8 @@ def update_points(request):
                     'timestamp': firestore.SERVER_TIMESTAMP
                 })
             else:
-                # Manejar caso donde no se encuentra el usuario
                 return redirect('error-page')
 
-        # Crear registros en la colección pointsHistory de forma masiva
         points_history_ref = db.collection('pointsHistory')
         for data in points_data:
             points_history_ref.add(data)
@@ -178,9 +175,37 @@ def gameList(request):
 def tournamentList(request):
     games = Game.objects.all()
     for game in games:
-      game.tournaments_created = Tournament.objects.filter(game=game, status='created')
-      game.tournaments_online = Tournament.objects.filter(game=game, status='online')
-      game.tournaments_ended = Tournament.objects.filter(game=game, status='ended')
+        game.tournaments_created = Tournament.objects.filter(game=game, status='created')
+        game.tournaments_online = Tournament.objects.filter(game=game, status='online')
+        game.tournaments_ended = Tournament.objects.filter(game=game, status='ended')
+
+        # # Procesar los torneos creados
+        # created_tournaments = Tournament.objects.filter(game=game, status='created')
+        # for tournament in created_tournaments:
+        #     firestore_tournament = db.collection('tournaments').document(tournament.uidRegister).get().to_dict()
+        #     if firestore_tournament:
+        #         tournament.inscribedPlayers = firestore_tournament.get('inscribedPlayers', [])
+        #     else:
+        #         game.tournaments_created.append(tournament)
+
+        # # Procesar los torneos en línea
+        # online_tournaments = Tournament.objects.filter(game=game, status='online')
+        # for tournament in online_tournaments:
+        #     firestore_tournament = db.collection('tournaments').document(tournament.uidRegister).get().to_dict()
+        #     if firestore_tournament:
+        #         tournament.inscribedPlayers = firestore_tournament.get('inscribedPlayers', [])
+        #     else:
+        #         game.tournaments_online.append(tournament)
+
+        # Procesar los torneos finalizados
+        ended_tournaments = Tournament.objects.filter(game=game, status='ended')
+        for tournament in ended_tournaments:
+            firestore_tournament = db.collection('tournaments').document(tournament.uidRegister).get().to_dict()
+            if firestore_tournament:
+                tournament.inscribedPlayers = firestore_tournament.get('inscribedPlayers', [])
+            else:
+                game.tournaments_ended.append(tournament)
+
     return render(request, 'tournaments/index.html', {'games': games})
 
 @login_required
@@ -192,7 +217,6 @@ def createTournament(request):
         date_str = formTournament.cleaned_data.get('date')
         time_str = formTournament.cleaned_data.get('time')
 
-        # Combina la fecha y hora en un solo objeto datetime
         date_time = datetime.strptime(f'{date_str} {time_str}', '%Y-%m-%d %H:%M:%S')
         date_time_plus_5_hours = date_time + timedelta(hours=5)
 
@@ -206,7 +230,6 @@ def createTournament(request):
         else:
             modified_url = 'imageurl.com'
 
-        # Genera un ID único para el documento en Firestore
         tournament_id = db.collection('tournaments').document().id
 
         data = {
@@ -218,17 +241,17 @@ def createTournament(request):
             'inscribedPlayers':[],
             'players': tournament.players,
             'points': tournament.points,
+            'avalaiblePoints': tournament.points,
             'rules': tournament.rules,
             'url': tournament.url,
             'imageURL': modified_url
         }
-        # Usa el ID generado para crear el documento en Firestore
         db.collection('tournaments').document(tournament_id).set(data)
 
-        # Actualiza el modelo Tournament en Django con el UID del documento y el valor de modified_url
+        tournament.avalaible_points = tournament.points
         tournament.uidRegister = tournament_id
         tournament.imageURL = modified_url
-        tournament.save() # Ahora guarda el torneo con los datos de Firestore
+        tournament.save()
 
         return redirect('tournament-list')
     else:
@@ -239,34 +262,29 @@ def createTournament(request):
 def editTournament(request, id):
     tournament = Tournament.objects.get(id=id)
     games = Game.objects.filter(status=1)
-    game_id = tournament.game_id # Obtener el game_id del torneo registrado
+    game_id = tournament.game_id
     
-    # Filtrar la lista de juegos para ubicar el juego correspondiente al game_id
     game_selected = games.filter(id=game_id).first()
     
-    # Obtener los juegos restantes (que no son el juego seleccionado)
     other_games = games.exclude(id=game_id)
     
-    # Concatenar el juego seleccionado y los juegos restantes
     games_ordered = [game_selected] + list(other_games)
     
     formTournament = TournamentForm(request.POST or None, request.FILES or None, instance=tournament)
     if formTournament.is_valid() and request.POST:
         formTournament.save()
+        tournament.avalaible_points = tournament.points
+        tournament.save()  
         date_str = formTournament.cleaned_data.get('date')
         time_str = formTournament.cleaned_data.get('time')
 
-        # Combina la fecha y hora en un solo objeto datetime
         date_time = datetime.strptime(f'{date_str} {time_str}', '%Y-%m-%d %H:%M:%S')
         date_time_plus_5_hours = date_time + timedelta(hours=5)
 
-        # Obtiene la referencia al documento del torneo en Firestore usando el UID almacenado
         tournament_ref = db.collection('tournaments').document(tournament.uidRegister)
         
-        # Obtiene los datos actuales del documento en Firestore
         current_data = tournament_ref.get().to_dict()
         
-        # Prepara los datos para actualizar en Firestore, manteniendo inscribedPlayers sin cambios
         data = {
             'creator': 'XxETDfQHDSB4lnLeDY0y',
             'name': tournament.name,
@@ -276,12 +294,11 @@ def editTournament(request, id):
             'inscribedPlayers': current_data.get('inscribedPlayers', []), 
             'players': tournament.players,
             'points': tournament.points,
+            'avalaiblePoints': tournament.points,
             'rules': tournament.rules,
             'url': tournament.url,
             'imageURL': tournament.imageURL
         }
-        
-        # Actualiza el documento en Firestore
         tournament_ref.set(data)
         
         return redirect('tournament-list')
@@ -363,7 +380,7 @@ def rangeList(request):
     ]
     return render(request, 'ranges/index.html', {'ranges': ranges})
 def reportView(request):
-    firestore_users = get_all_users() # Obtiene los datos de Firestore
+    firestore_users = get_all_users()
     return render(request,'players/report.html',{'firestore_users': firestore_users})
 
 def generate_pdf(request):

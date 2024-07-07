@@ -3,6 +3,10 @@
 
 {% block container %}
 <style>
+    td {
+        align-content: center;
+    }
+
     .icon-btn {
         padding: 0.01rem 0.30rem;
         border-radius: 0.25rem;
@@ -93,9 +97,9 @@
                             <td class="text-center align-middle">{{ forloop.counter }}</td>
                             <td class="align-middle">{{ tournament.name }}</td>
                             <td class="align-middle">{{ tournament.date }}</td>
-                            <td class="align-middle">{{ tournament.time }}</td>
-                            <td class="align-middle">{{ tournament.max_participants }}</td>
-                            <td class="align-middle">{{ tournament.points }}</td>
+                            <td class="text-center">{{ tournament.time }}</td>
+                            <td class="text-center">{{ tournament.players }}</td>
+                            <td class="text-center">{{ tournament.points }}</td>
                             <td class="text-center align-middle">
                                 <a href="#editTournamentModal-{{ tournament.id }}" class="btn btn-primary"
                                     data-bs-toggle="modal">
@@ -149,7 +153,9 @@
                                 <select class="form-select" id="participant" name="participant">
                                     <option selected>Seleccione un participante</option>
                                     {% for user in firestore_users %}
+                                    {% if user.uid in tournament.inscribedPlayers %}
                                     <option value="{{ user.username }}">{{ user.username }}</option>
+                                    {% endif %}
                                     {% endfor %}
                                 </select>
                             </div>
@@ -194,7 +200,7 @@
                 var inputRow = modal.querySelector('#inputRow');
                 var clone = inputRow.cloneNode(true);
                 clone.classList.add('cloned-row'); // Agregar una clase para identificar las filas clonadas
-                
+
                 // Limpiar los campos clonados
                 clone.querySelectorAll('input[type="text"], input[type="number"], select').forEach(function (input) {
                     input.value = ''; // Vaciar el valor de los campos de texto, números y select
